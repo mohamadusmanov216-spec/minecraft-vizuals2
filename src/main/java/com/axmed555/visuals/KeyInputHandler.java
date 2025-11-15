@@ -87,7 +87,6 @@ public class KeyInputHandler {
 
         Minecraft mc = Minecraft.getInstance();
         if (mc.player != null && mc.getConnection() != null) {
-            // Используем новый метод для отправки сообщений
             mc.player.connection.sendChat(message, null);
         }
     }
