@@ -1,0 +1,36 @@
+modLoader="javafml"
+loaderVersion="[52,)"
+license="All Rights Reserved"
+issueTrackerURL="https://github.com/axmed555/visuals/issues"
+
+[[mods]]
+modId="axmed555_visuals"
+version="1.0.0"
+displayName="Axmed555 Visuals"
+updateJSONURL=""
+displayURL="https://github.com/axmed555/visuals"
+logoFile=""
+credits="Created by Axmed555"
+authors="Axmed555"
+description='''
+Добавляет визуальные эффекты в Minecraft:
+- Цветные трейлы частиц за игроком
+- Увеличенные хитбоксы с настраиваемым цветом
+- Эффекты при попадании
+- Косметические шляпы (Crown, Aura, Wings, Halo)
+Все настраивается через встроенное меню конфигурации.
+'''
+
+[[dependencies.axmed555_visuals]]
+modId="forge"
+mandatory=true
+versionRange="[52,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.axmed555_visuals]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.21.1,1.22)"
+ordering="NONE"
+side="BOTH"
