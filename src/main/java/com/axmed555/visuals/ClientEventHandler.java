@@ -29,37 +29,42 @@ public class ClientEventHandler {
     private static long lastTrajectoryTick = 0;
     private static long skyTickCounter = 0;
 
-    @SubscribeEvent
-    public static void onRenderLevelStage(RenderLevelStageEvent event) {
-        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_PARTICLES) return;
-        
-        Player player = mc.player;
-        if (player == null) return;
+@SubscribeEvent
+public static void onRenderLevelStage(RenderLevelStageEvent event) {
+    if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_PARTICLES) return;
+    
+    Player player = mc.player;
+    if (player == null) return;
 
-        PoseStack poseStack = event.getPoseStack();
-        Vec3 cameraPos = event.getCamera().getPosition();
+    // ИСПРАВЛЕННАЯ ЧАСТЬ - новый API для PoseStack
+    var poseStack = new com.mojang.blaze3d.vertex.PoseStack();
+    poseStack.setIdentity();
+    var camera = event.getCamera();
+    poseStack.mulPose(camera.rotation());
+    poseStack.translate(-camera.getPosition().x, -camera.getPosition().y, -camera.getPosition().z);
 
-        if (Config.SHOW_TRAIL.get()) {
-            spawnTrailParticles(player);
-        }
+    Vec3 cameraPos = event.getCamera().getPosition();
 
-        if (Config.SHOW_HITBOX.get()) {
-            renderEnlargedHitbox(player, poseStack, cameraPos, event.getPartialTick());
-        }
-
-        if (Config.HAT_STYLE.get() != Config.HatStyle.NONE) {
-            renderHat(player, poseStack, cameraPos, event.getPartialTick());
-        }
-        
-        if (Config.SHOW_TRAJECTORIES.get()) {
-            renderTrajectories(player, poseStack, cameraPos);
-        }
-        
-        if (Config.SHOW_SKY_EFFECTS.get()) {
-            renderSkyEffects(player);
-        }
+    if (Config.SHOW_TRAIL.get()) {
+        spawnTrailParticles(player);
     }
 
+    if (Config.SHOW_HITBOX.get()) {
+        renderEnlargedHitbox(player, poseStack, cameraPos, event.getPartialTick());
+    }
+
+    if (Config.HAT_STYLE.get() != Config.HatStyle.NONE) {
+        renderHat(player, poseStack, cameraPos, event.getPartialTick());
+    }
+    
+    if (Config.SHOW_TRAJECTORIES.get()) {
+        renderTrajectories(player, poseStack, cameraPos);
+    }
+    
+    if (Config.SHOW_SKY_EFFECTS.get()) {
+        renderSkyEffects(player);
+    }
+}
     private static void spawnTrailParticles(Player player) {
         Config.TrailStyle style = Config.TRAIL_STYLE.get();
         
@@ -242,77 +247,73 @@ public class ClientEventHandler {
         }
     }
 
-    private static void renderEnlargedHitbox(Player player, PoseStack poseStack, 
+private static void renderEnlargedHitbox(Player player, PoseStack poseStack, 
                                      Vec3 cameraPos, float partialTicks) {
-        AABB box = player.getBoundingBox();
-        double multiplier = 1.5;
-        
-        double centerX = (box.minX + box.maxX) / 2;
-        double centerY = (box.minY + box.maxY) / 2;
-        double centerZ = (box.minZ + box.maxZ) / 2;
-        
-        double width = (box.maxX - box.minX) * multiplier / 2;
-        double height = (box.maxY - box.minY) * multiplier / 2;
-        double depth = (box.maxZ - box.minZ) * multiplier / 2;
-        
-        AABB enlargedBox = new AABB(
-            centerX - width, centerY - height, centerZ - depth,
-            centerX + width, centerY + height, centerZ + depth
-        );
+    AABB box = player.getBoundingBox();
+    double multiplier = 1.5;
+    
+    double centerX = (box.minX + box.maxX) / 2;
+    double centerY = (box.minY + box.maxY) / 2;
+    double centerZ = (box.minZ + box.maxZ) / 2;
+    
+    double width = (box.maxX - box.minX) * multiplier / 2;
+    double height = (box.maxY - box.minY) * multiplier / 2;
+    double depth = (box.maxZ - box.minZ) * multiplier / 2;
+    
+    AABB enlargedBox = new AABB(
+        centerX - width, centerY - height, centerZ - depth,
+        centerX + width, centerY + height, centerZ + depth
+    );
 
-        poseStack.pushPose();
-        poseStack.translate(-cameraPos.x, -cameraPos.y, -cameraPos.z);
-        
-        RenderSystem.disableDepthTest();
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.lineWidth(2.0f);
+    // УБРАЛ pushPose() и translate() - уже сделано в основном методе
+    
+    RenderSystem.disableDepthTest();
+    RenderSystem.enableBlend();
+    RenderSystem.defaultBlendFunc();
+    RenderSystem.lineWidth(2.0f);
 
-        float r = Config.HITBOX_RED.get() / 255f;
-        float g = Config.HITBOX_GREEN.get() / 255f;
-        float b = Config.HITBOX_BLUE.get() / 255f;
-        
-        MultiBufferSource.BufferSource bufferSource = mc.renderBuffers().bufferSource();
-        LevelRenderer.renderLineBox(poseStack, bufferSource.getBuffer(
-            net.minecraft.client.renderer.RenderType.lines()), 
-            enlargedBox, r, g, b, 1.0f);
+    float r = Config.HITBOX_RED.get() / 255f;
+    float g = Config.HITBOX_GREEN.get() / 255f;
+    float b = Config.HITBOX_BLUE.get() / 255f;
+    
+    MultiBufferSource.BufferSource bufferSource = mc.renderBuffers().bufferSource();
+    LevelRenderer.renderLineBox(poseStack, bufferSource.getBuffer(
+        net.minecraft.client.renderer.RenderType.lines()), 
+        enlargedBox, r, g, b, 1.0f);
 
-        bufferSource.endBatch();
-        RenderSystem.enableDepthTest();
-        RenderSystem.disableBlend();
-        
-        poseStack.popPose();
+    bufferSource.endBatch();
+    RenderSystem.enableDepthTest();
+    RenderSystem.disableBlend();
+    
+    // УБРАЛ popPose() - уже сделано в основном методе
+}
+private static void renderHat(Player player, PoseStack poseStack, 
+                      Vec3 cameraPos, float partialTicks) {
+    Config.HatStyle style = Config.HAT_STYLE.get();
+    
+    poseStack.pushPose();  // ← ОСТАВЬ ТОЛЬКО ЭТУ СТРОКУ
+    
+    double x = player.getX();
+    double y = player.getY() + player.getBbHeight() + 0.5;
+    double z = player.getZ();
+    
+    switch (style) {
+        case CROWN:
+            renderCrown(x, y, z);
+            break;
+        case AURA:
+            renderAura(x, y - 0.5, z);
+            break;
+        case WINGS:
+            renderWings(x, y - 0.3, z);
+            break;
+        case HALO:
+            renderHalo(x, y, z);
+            break;
     }
-
-    private static void renderHat(Player player, PoseStack poseStack, 
-                          Vec3 cameraPos, float partialTicks) {
-        Config.HatStyle style = Config.HAT_STYLE.get();
-        
-        poseStack.pushPose();
-        poseStack.translate(-cameraPos.x, -cameraPos.y, -cameraPos.z);
-        
-        double x = player.getX();
-        double y = player.getY() + player.getBbHeight() + 0.5;
-        double z = player.getZ();
-        
-        switch (style) {
-            case CROWN:
-                renderCrown(x, y, z);
-                break;
-            case AURA:
-                renderAura(x, y - 0.5, z);
-                break;
-            case WINGS:
-                renderWings(x, y - 0.3, z);
-                break;
-            case HALO:
-                renderHalo(x, y, z);
-                break;
-        }
-        
-        poseStack.popPose();
-    }
-
+    
+    // УБРАЛ popPose() - не нужен
+}
     private static void renderCrown(double x, double y, double z) {
         if (mc.player.level().random.nextFloat() < 0.2f) {
             float gradient = mc.player.level().random.nextFloat();
