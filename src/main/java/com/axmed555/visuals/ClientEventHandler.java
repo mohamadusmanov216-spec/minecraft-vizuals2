@@ -1,7 +1,6 @@
 package com.axmed555.visuals;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.axmed555.visuals.effects.VisualEffects;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -16,22 +15,22 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.common.Mod;
 import org.joml.Vector3f;
 
+@Mod.EventBusSubscriber(modid = "axmed555_visuals", value = Dist.CLIENT)
 public class ClientEventHandler {
-    private final Minecraft mc = Minecraft.getInstance();
-    private boolean wasOnGround = false;
-    private boolean previousWasOnGround = false;
-    private long lastKillTime = 0;
-    private Vec3 cachedJumpMotion = null;
-    private long lastTrajectoryTick = 0;
-        public ClientEventHandler() {
-        MinecraftForge.EVENT_BUS.register(new VisualEffects());
-    }
-
+    private static final Minecraft mc = Minecraft.getInstance();
+    private static boolean wasOnGround = false;
+    private static boolean previousWasOnGround = false;
+    private static long lastKillTime = 0;
+    private static Vec3 cachedJumpMotion = null;
+    private static long lastTrajectoryTick = 0;
+    private static long skyTickCounter = 0;
 
     @SubscribeEvent
-    public void onRenderLevelStage(RenderLevelStageEvent event) {
+    public static void onRenderLevelStage(RenderLevelStageEvent event) {
         if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_PARTICLES) return;
         
         Player player = mc.player;
@@ -61,7 +60,7 @@ public class ClientEventHandler {
         }
     }
 
-    private void spawnTrailParticles(Player player) {
+    private static void spawnTrailParticles(Player player) {
         Config.TrailStyle style = Config.TRAIL_STYLE.get();
         
         switch (style) {
@@ -101,7 +100,7 @@ public class ClientEventHandler {
         }
     }
     
-    private void spawnNormalTrail(Player player) {
+    private static void spawnNormalTrail(Player player) {
         if (player.level().random.nextFloat() < 0.3f) {
             float r = Config.TRAIL_RED.get() / 255f;
             float g = Config.TRAIL_GREEN.get() / 255f;
@@ -116,7 +115,7 @@ public class ClientEventHandler {
         }
     }
     
-    private void spawnFireTrail(Player player) {
+    private static void spawnFireTrail(Player player) {
         if (player.level().random.nextFloat() < 0.4f) {
             double x = player.getX() + (player.level().random.nextDouble() - 0.5) * 0.5;
             double y = player.getY() + player.level().random.nextDouble() * 0.5;
@@ -129,7 +128,7 @@ public class ClientEventHandler {
         }
     }
     
-    private void spawnStarsTrail(Player player) {
+    private static void spawnStarsTrail(Player player) {
         if (player.level().random.nextFloat() < 0.25f) {
             double x = player.getX() + (player.level().random.nextDouble() - 0.5) * 0.6;
             double y = player.getY() + player.level().random.nextDouble() * player.getBbHeight();
@@ -142,7 +141,7 @@ public class ClientEventHandler {
         }
     }
     
-    private void spawnLightningTrail(Player player) {
+    private static void spawnLightningTrail(Player player) {
         if (player.level().random.nextFloat() < 0.2f) {
             double x = player.getX() + (player.level().random.nextDouble() - 0.5) * 0.3;
             double y = player.getY() + player.level().random.nextDouble() * player.getBbHeight();
@@ -156,7 +155,7 @@ public class ClientEventHandler {
         }
     }
     
-    private void spawnMagicTrail(Player player) {
+    private static void spawnMagicTrail(Player player) {
         if (player.level().random.nextFloat() < 0.35f) {
             double x = player.getX() + (player.level().random.nextDouble() - 0.5) * 0.5;
             double y = player.getY() + player.level().random.nextDouble() * player.getBbHeight();
@@ -172,7 +171,7 @@ public class ClientEventHandler {
         }
     }
     
-    private void spawnHeartsTrail(Player player) {
+    private static void spawnHeartsTrail(Player player) {
         if (player.level().random.nextFloat() < 0.15f) {
             double x = player.getX() + (player.level().random.nextDouble() - 0.5) * 0.4;
             double y = player.getY() + player.level().random.nextDouble() * player.getBbHeight();
@@ -182,7 +181,7 @@ public class ClientEventHandler {
         }
     }
     
-    private void spawnSpiralTrail(Player player) {
+    private static void spawnSpiralTrail(Player player) {
         if (player.level().random.nextFloat() < 0.3f) {
             long time = player.level().getGameTime();
             double angle = (time % 360) * Math.PI / 180.0;
@@ -201,7 +200,7 @@ public class ClientEventHandler {
         }
     }
     
-    private void spawnEnderTrail(Player player) {
+    private static void spawnEnderTrail(Player player) {
         if (player.level().random.nextFloat() < 0.3f) {
             double x = player.getX() + (player.level().random.nextDouble() - 0.5) * 0.5;
             double y = player.getY() + player.level().random.nextDouble() * player.getBbHeight();
@@ -217,7 +216,7 @@ public class ClientEventHandler {
         }
     }
     
-    private void spawnJumpEffect(Player player) {
+    private static void spawnJumpEffect(Player player) {
         double x = player.getX();
         double y = player.getY();
         double z = player.getZ();
@@ -233,7 +232,7 @@ public class ClientEventHandler {
         }
     }
     
-    private void spawnSprintEffect(Player player) {
+    private static void spawnSprintEffect(Player player) {
         if (player.level().random.nextFloat() < 0.3f) {
             double x = player.getX() + (player.level().random.nextDouble() - 0.5) * 0.3;
             double y = player.getY() + 0.1;
@@ -243,7 +242,7 @@ public class ClientEventHandler {
         }
     }
 
-    private void renderEnlargedHitbox(Player player, PoseStack poseStack, 
+    private static void renderEnlargedHitbox(Player player, PoseStack poseStack, 
                                      Vec3 cameraPos, float partialTicks) {
         AABB box = player.getBoundingBox();
         double multiplier = 1.5;
@@ -285,7 +284,7 @@ public class ClientEventHandler {
         poseStack.popPose();
     }
 
-    private void renderHat(Player player, PoseStack poseStack, 
+    private static void renderHat(Player player, PoseStack poseStack, 
                           Vec3 cameraPos, float partialTicks) {
         Config.HatStyle style = Config.HAT_STYLE.get();
         
@@ -314,7 +313,7 @@ public class ClientEventHandler {
         poseStack.popPose();
     }
 
-    private void renderCrown(double x, double y, double z) {
+    private static void renderCrown(double x, double y, double z) {
         if (mc.player.level().random.nextFloat() < 0.2f) {
             float gradient = mc.player.level().random.nextFloat();
             float r = lerp(Config.CROWN_R1.get() / 255f, Config.CROWN_R2.get() / 255f, gradient);
@@ -330,7 +329,7 @@ public class ClientEventHandler {
         }
     }
 
-    private void renderAura(double x, double y, double z) {
+    private static void renderAura(double x, double y, double z) {
         if (mc.player.level().random.nextFloat() < 0.3f) {
             double angle = mc.player.level().random.nextDouble() * Math.PI * 2;
             double radius = 0.6;
@@ -349,7 +348,7 @@ public class ClientEventHandler {
         }
     }
 
-    private void renderWings(double x, double y, double z) {
+    private static void renderWings(double x, double y, double z) {
         if (mc.player.level().random.nextFloat() < 0.25f) {
             double offsetX = (mc.player.level().random.nextDouble() - 0.5) * 1.2;
             float side = offsetX > 0 ? 1.0f : 0.0f;
@@ -366,7 +365,7 @@ public class ClientEventHandler {
         }
     }
 
-    private void renderHalo(double x, double y, double z) {
+    private static void renderHalo(double x, double y, double z) {
         if (mc.player.level().random.nextFloat() < 0.3f) {
             double angle = mc.player.level().random.nextDouble() * Math.PI * 2;
             double radius = 0.5;
@@ -384,12 +383,12 @@ public class ClientEventHandler {
         }
     }
     
-    private float lerp(float start, float end, float t) {
+    private static float lerp(float start, float end, float t) {
         return start + (end - start) * t;
     }
 
     @SubscribeEvent
-    public void onLivingHurt(LivingHurtEvent event) {
+    public static void onLivingHurt(LivingHurtEvent event) {
         if (!event.getEntity().level().isClientSide) return;
         if (mc.player == null) return;
         
@@ -412,7 +411,7 @@ public class ClientEventHandler {
         }
     }
 
-    private void spawnHitEffects(LivingEntity entity) {
+    private static void spawnHitEffects(LivingEntity entity) {
         float r = Config.HIT_EFFECT_RED.get() / 255f;
         float g = Config.HIT_EFFECT_GREEN.get() / 255f;
         float b = Config.HIT_EFFECT_BLUE.get() / 255f;
@@ -431,7 +430,7 @@ public class ClientEventHandler {
         }
     }
     
-    private void spawnAttackEffects(LivingEntity entity) {
+    private static void spawnAttackEffects(LivingEntity entity) {
         double x = entity.getX();
         double y = entity.getY() + entity.getBbHeight() / 2;
         double z = entity.getZ();
@@ -452,7 +451,7 @@ public class ClientEventHandler {
         entity.level().addParticle(ParticleTypes.FLASH, x, y, z, 0, 0, 0);
     }
     
-    private void spawnKillEffects(LivingEntity entity) {
+    private static void spawnKillEffects(LivingEntity entity) {
         double x = entity.getX();
         double y = entity.getY() + entity.getBbHeight() / 2;
         double z = entity.getZ();
@@ -478,7 +477,7 @@ public class ClientEventHandler {
         entity.level().addParticle(ParticleTypes.EXPLOSION, x, y, z, 0, 0, 0);
     }
     
-    private void renderTrajectories(Player player, PoseStack poseStack, Vec3 cameraPos) {
+    private static void renderTrajectories(Player player, PoseStack poseStack, Vec3 cameraPos) {
         if (player.level() == null) return;
         
         long currentTick = player.level().getGameTime();
@@ -491,7 +490,7 @@ public class ClientEventHandler {
             player.level().getEntitiesOfClass(
                 net.minecraft.world.entity.projectile.Projectile.class,
                 searchBox
-            ).forEach(this::renderProjectileTrajectory);
+            ).forEach(ClientEventHandler::renderProjectileTrajectory);
         }
         
         if (previousWasOnGround && !player.onGround()) {
@@ -507,7 +506,7 @@ public class ClientEventHandler {
         previousWasOnGround = player.onGround();
     }
     
-    private void renderProjectileTrajectory(net.minecraft.world.entity.projectile.Projectile projectile) {
+    private static void renderProjectileTrajectory(net.minecraft.world.entity.projectile.Projectile projectile) {
         Vec3 pos = projectile.position();
         Vec3 motion = projectile.getDeltaMovement();
         
@@ -534,7 +533,7 @@ public class ClientEventHandler {
         }
     }
     
-    private void renderPlayerJumpTrajectory(Player player, Vec3 initialMotion) {
+    private static void renderPlayerJumpTrajectory(Player player, Vec3 initialMotion) {
         Vec3 pos = player.position();
         
         Vec3 current = pos;
@@ -557,9 +556,7 @@ public class ClientEventHandler {
         }
     }
     
-    private long skyTickCounter = 0;
-    
-    private void renderSkyEffects(Player player) {
+    private static void renderSkyEffects(Player player) {
         skyTickCounter++;
         Config.SkyStyle style = Config.SKY_STYLE.get();
         
@@ -579,7 +576,7 @@ public class ClientEventHandler {
         }
     }
     
-    private void renderEnhancedStars(Player player) {
+    private static void renderEnhancedStars(Player player) {
         if (skyTickCounter % 10 != 0) return;
         
         for (int i = 0; i < 3; i++) {
@@ -599,7 +596,7 @@ public class ClientEventHandler {
         }
     }
     
-    private void renderShootingStars(Player player) {
+    private static void renderShootingStars(Player player) {
         if (skyTickCounter % 40 != 0) return;
         
         double angle = player.level().random.nextDouble() * Math.PI * 2;
@@ -626,7 +623,7 @@ public class ClientEventHandler {
         }
     }
     
-    private void renderAurora(Player player) {
+    private static void renderAurora(Player player) {
         if (skyTickCounter % 5 != 0) return;
         
         double time = skyTickCounter * 0.02;
@@ -653,7 +650,7 @@ public class ClientEventHandler {
         }
     }
     
-    private void renderSparklingStars(Player player) {
+    private static void renderSparklingStars(Player player) {
         if (skyTickCounter % 8 != 0) return;
         
         for (int i = 0; i < 2; i++) {
@@ -680,7 +677,7 @@ public class ClientEventHandler {
         }
     }
     
-    private Vector3f hueToRgb(float hue) {
+    private static Vector3f hueToRgb(float hue) {
         float r = Math.abs(hue * 6.0f - 3.0f) - 1.0f;
         float g = 2.0f - Math.abs(hue * 6.0f - 2.0f);
         float b = 2.0f - Math.abs(hue * 6.0f - 4.0f);
