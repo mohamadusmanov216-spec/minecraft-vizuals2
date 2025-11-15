@@ -6,8 +6,11 @@ import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.client.settings.KeyConflictContext;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.common.Mod;
 import org.lwjgl.glfw.GLFW;
 
+@Mod.EventBusSubscriber(modid = "axmed555_visuals", value = Dist.CLIENT)
 public class KeyInputHandler {
     private static final String CATEGORY = "key.categories.axmed555_visuals";
 
