@@ -324,7 +324,6 @@ public class ConfigScreen extends Screen {
 
     @Override
     public void removed() {
-        com.axmed555.visuals.AxmedVisuals.saveConfig();
         super.removed();
     }
 
