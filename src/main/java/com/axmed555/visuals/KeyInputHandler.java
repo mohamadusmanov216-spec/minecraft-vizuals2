@@ -3,7 +3,7 @@ package com.axmed555.visuals;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.KeyMapping;
 import com.mojang.blaze3d.platform.InputConstants;
-import net.minecraftforge.client.event.ClientTickEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.api.distmarker.Dist;
@@ -55,7 +55,9 @@ public class KeyInputHandler {
     );
 
     @SubscribeEvent
-    public static void onClientTick(ClientTickEvent.Post event) {
+    public static void onClientTick(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) return;
+        
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.level == null) return;
 
@@ -87,7 +89,7 @@ public class KeyInputHandler {
 
         Minecraft mc = Minecraft.getInstance();
         if (mc.player != null && mc.getConnection() != null) {
-            mc.player.connection.sendChat(message, null);
+            mc.player.connection.sendChat(message);
         }
     }
 }
