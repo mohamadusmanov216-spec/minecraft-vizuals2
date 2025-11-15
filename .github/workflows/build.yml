@@ -23,6 +23,9 @@ jobs:
       with:
         gradle-version: '8.8'
         
+    - name: Clean previous builds  # 👈 ДОБАВЬ ЭТОТ ШАГ
+      run: gradle clean
+      
     - name: Build with Gradle
       run: gradle build
       
