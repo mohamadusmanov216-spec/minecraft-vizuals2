@@ -13,7 +13,7 @@ import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
-import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.common.Mod;
@@ -36,25 +36,22 @@ public class ClientEventHandler {
         Player player = Minecraft.getInstance().player;
         if (player == null) return;
 
-        // ИСПРАВЛЕННАЯ ЧАСТЬ - новый API для PoseStack
-        var poseStack = new com.mojang.blaze3d.vertex.PoseStack();
-        poseStack.setIdentity();
-        var camera = event.getCamera();
-        poseStack.mulPose(camera.rotation());
-        poseStack.translate(-camera.getPosition().x, -camera.getPosition().y, -camera.getPosition().z);
-
+        PoseStack poseStack = event.getPoseStack();
+        poseStack.pushPose();
+        
         Vec3 cameraPos = event.getCamera().getPosition();
+        poseStack.translate(-cameraPos.x, -cameraPos.y, -cameraPos.z);
 
         if (Config.SHOW_TRAIL.get()) {
             spawnTrailParticles(player);
         }
 
         if (Config.SHOW_HITBOX.get()) {
-            renderEnlargedHitbox(player, poseStack, cameraPos, event.getPartialTick());
+            renderEnlargedHitbox(player, poseStack, cameraPos);
         }
 
         if (Config.HAT_STYLE.get() != Config.HatStyle.NONE) {
-            renderHat(player, poseStack, cameraPos, event.getPartialTick());
+            renderHat(player, poseStack, cameraPos);
         }
         
         if (Config.SHOW_TRAJECTORIES.get()) {
@@ -64,36 +61,22 @@ public class ClientEventHandler {
         if (Config.SHOW_SKY_EFFECTS.get()) {
             renderSkyEffects(player);
         }
+        
+        poseStack.popPose();
     }
 
     private static void spawnTrailParticles(Player player) {
         Config.TrailStyle style = Config.TRAIL_STYLE.get();
         
         switch (style) {
-            case NORMAL:
-                spawnNormalTrail(player);
-                break;
-            case FIRE:
-                spawnFireTrail(player);
-                break;
-            case STARS:
-                spawnStarsTrail(player);
-                break;
-            case LIGHTNING:
-                spawnLightningTrail(player);
-                break;
-            case MAGIC:
-                spawnMagicTrail(player);
-                break;
-            case HEARTS:
-                spawnHeartsTrail(player);
-                break;
-            case SPIRAL:
-                spawnSpiralTrail(player);
-                break;
-            case ENDER:
-                spawnEnderTrail(player);
-                break;
+            case NORMAL -> spawnNormalTrail(player);
+            case FIRE -> spawnFireTrail(player);
+            case STARS -> spawnStarsTrail(player);
+            case LIGHTNING -> spawnLightningTrail(player);
+            case MAGIC -> spawnMagicTrail(player);
+            case HEARTS -> spawnHeartsTrail(player);
+            case SPIRAL -> spawnSpiralTrail(player);
+            case ENDER -> spawnEnderTrail(player);
         }
         
         if (Config.SHOW_JUMP_EFFECTS.get() && !player.onGround() && wasOnGround) {
@@ -248,8 +231,7 @@ public class ClientEventHandler {
         }
     }
 
-    private static void renderEnlargedHitbox(Player player, PoseStack poseStack, 
-                                     Vec3 cameraPos, float partialTicks) {
+    private static void renderEnlargedHitbox(Player player, PoseStack poseStack, Vec3 cameraPos) {
         AABB box = player.getBoundingBox();
         double multiplier = 1.5;
         
@@ -278,9 +260,14 @@ public class ClientEventHandler {
         float b = Config.HITBOX_BLUE.get() / 255f;
         
         MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
-        LevelRenderer.renderLineBox(poseStack, bufferSource.getBuffer(
-            net.minecraft.client.renderer.RenderType.lines()), 
-            enlargedBox, r, g, b, 1.0f);
+        
+        LevelRenderer.renderShape(
+            poseStack,
+            bufferSource.getBuffer(net.minecraft.client.renderer.RenderType.lines()),
+            enlargedBox,
+            -cameraPos.x, -cameraPos.y, -cameraPos.z,
+            r, g, b, 1.0f
+        );
 
         bufferSource.endBatch();
         RenderSystem.enableDepthTest();
@@ -289,32 +276,20 @@ public class ClientEventHandler {
         poseStack.popPose();
     }
 
-    private static void renderHat(Player player, PoseStack poseStack, 
-                          Vec3 cameraPos, float partialTicks) {
+    private static void renderHat(Player player, PoseStack poseStack, Vec3 cameraPos) {
         Config.HatStyle style = Config.HAT_STYLE.get();
-        
-        poseStack.pushPose();
         
         double x = player.getX();
         double y = player.getY() + player.getBbHeight() + 0.5;
         double z = player.getZ();
         
         switch (style) {
-            case CROWN:
-                renderCrown(x, y, z);
-                break;
-            case AURA:
-                renderAura(x, y - 0.5, z);
-                break;
-            case WINGS:
-                renderWings(x, y - 0.3, z);
-                break;
-            case HALO:
-                renderHalo(x, y, z);
-                break;
+            case CROWN -> renderCrown(x, y, z);
+            case AURA -> renderAura(x, y - 0.5, z);
+            case WINGS -> renderWings(x, y - 0.3, z);
+            case HALO -> renderHalo(x, y, z);
+            default -> {}
         }
-        
-        poseStack.popPose();
     }
 
     private static void renderCrown(double x, double y, double z) {
@@ -392,8 +367,8 @@ public class ClientEventHandler {
     }
 
     @SubscribeEvent
-    public static void onLivingHurt(LivingHurtEvent event) {
-        if (!event.getEntity().level().isClientSide) return;
+    public static void onLivingDamage(LivingDamageEvent event) {
+        if (!event.getEntity().level().isClientSide()) return;
         if (Minecraft.getInstance().player == null) return;
         
         Entity entity = event.getEntity();
@@ -565,18 +540,10 @@ public class ClientEventHandler {
         Config.SkyStyle style = Config.SKY_STYLE.get();
         
         switch (style) {
-            case STARS:
-                renderEnhancedStars(player);
-                break;
-            case SHOOTING_STARS:
-                renderShootingStars(player);
-                break;
-            case AURORA:
-                renderAurora(player);
-                break;
-            case SPARKLING:
-                renderSparklingStars(player);
-                break;
+            case STARS -> renderEnhancedStars(player);
+            case SHOOTING_STARS -> renderShootingStars(player);
+            case AURORA -> renderAurora(player);
+            case SPARKLING -> renderSparklingStars(player);
         }
     }
     
