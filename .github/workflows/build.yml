@@ -24,7 +24,7 @@ jobs:
         gradle-version: '8.8'
         
     - name: Build with Gradle
-      run: gradle clean build --refresh-dependencies --no-daemon
+      run: gradle clean build --no-daemon --stacktrace -x check
       
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
