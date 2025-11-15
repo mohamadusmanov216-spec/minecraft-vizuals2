@@ -1,26 +1,8 @@
-buildscript {
-    repositories {
-        maven {
-            name = 'Forge'
-            url = 'https://maven.minecraftforge.net/'
-        }
-    }
-    dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '6.0.+', changing: true
-    }
-}
-
-// 👇 ИСПОЛЬЗУЙ apply plugin ВМЕСТО блока plugins
-apply plugin: 'eclipse'
-apply plugin: 'idea'
-apply plugin: 'net.minecraftforge.gradle'
-// 👆 ИСПОЛЬЗУЙ apply plugin ВМЕСТО блока plugins
-
-repositories {
-    maven {
-        name = 'Forge'
-        url = 'https://maven.minecraftforge.net/'
-    }
+plugins {
+    id 'eclipse'
+    id 'idea'
+    id 'net.minecraftforge.gradle' version '[6.0.16,6.2)'
+    id 'org.parchmentmc.librarian.forgegradle' version '1.+'
 }
 
 version = mod_version
@@ -30,24 +12,56 @@ base {
     archivesName = mod_id
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
 
 minecraft {
     mappings channel: mapping_channel, version: mapping_version
     
-    copyIdeResources = true
+    // Этот параметр больше не поддерживается в новых версиях, удалите его
+    // copyIdeResources = true
     
     runs {
         configureEach {
             workingDirectory project.file('run')
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
+            
             mods {
                 "${mod_id}" {
                     source sourceSets.main
                 }
             }
         }
+
+        client {
+            // Дополнительные настройки для клиента
+        }
+
+        server {
+            // Дополнительные настройки для сервера
+        }
+
+        data {
+            // Настройки для генерации данных
+            workingDirectory project.file('run-data')
+            args '--mod', mod_id, '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
+        }
+    }
+}
+
+// Добавьте этот блок для репозиториев
+repositories {
+    maven {
+        name = 'ParchmentMC'
+        url = 'https://maven.parchmentmc.org'
+    }
+    maven {
+        name = 'Forge'
+        url = 'https://maven.minecraftforge.net/'
     }
 }
 
@@ -58,7 +72,10 @@ dependencies {
 tasks.named('processResources', ProcessResources).configure {
     var replaceProperties = [
             minecraft_version: minecraft_version,
+            minecraft_version_range: minecraft_version_range,
             forge_version: forge_version,
+            forge_version_range: forge_version_range,
+            loader_version_range: loader_version_range,
             mod_id: mod_id,
             mod_name: mod_name,
             mod_license: mod_license,
@@ -85,4 +102,10 @@ tasks.named('jar', Jar).configure {
             "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
     }
+    
+    finalizedBy 'reobfJar'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
 }
