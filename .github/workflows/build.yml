@@ -3,8 +3,6 @@ name: Build Minecraft Mod
 on:
   push:
     branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
 
 jobs:
   build:
@@ -20,11 +18,8 @@ jobs:
         java-version: '21'
         distribution: 'temurin'
         
-    - name: Make gradlew executable
-      run: chmod +x ./gradlew
-      
     - name: Build with Gradle
-      run: ./gradlew build
+      run: gradle build
       
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
