@@ -3,6 +3,8 @@ name: Build Minecraft Mod
 on:
   push:
     branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
 
 jobs:
   build:
@@ -17,17 +19,19 @@ jobs:
       with:
         java-version: '21'
         distribution: 'temurin'
+        cache: 'gradle'
         
-    - name: Setup Gradle 8.8
-      uses: gradle/actions/setup-gradle@v3
-      with:
-        gradle-version: '8.8'
-        
-    - name: Clean previous builds  # 👈 ДОБАВЬ ЭТОТ ШАГ
-      run: gradle clean
+    - name: Make gradlew executable
+      run: chmod +x ./gradlew
+      
+    - name: Clean previous builds
+      run: ./gradlew clean
+      
+    - name: Setup project
+      run: ./gradlew setupDecompWorkspace
       
     - name: Build with Gradle
-      run: gradle build
+      run: ./gradlew build
       
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
