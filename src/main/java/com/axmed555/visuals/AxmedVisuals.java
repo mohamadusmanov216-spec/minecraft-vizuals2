@@ -19,9 +19,13 @@ public class AxmedVisuals {
     private static ModConfig clientConfig;
 
     public AxmedVisuals() {
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::clientSetup);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onConfigLoad);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::registerKeys);
+        var modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+        
+        modEventBus.addListener(this::clientSetup);
+        modEventBus.addListener(this::onConfigLoad);
+        modEventBus.addListener(this::registerKeys);
+        
+        // Регистрация конфига
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, Config.SPEC);
         
         ModLoadingContext.get().registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class,
