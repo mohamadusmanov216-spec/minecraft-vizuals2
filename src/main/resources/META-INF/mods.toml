@@ -1,101 +1,24 @@
-buildscript {
-    repositories {
-        maven {
-            name = 'Forge'
-            url = 'https://maven.minecraftforge.net/'
-        }
-    }
-    dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '6.0.+', changing: true
-    }
-}
+modLoader="javafml"
+loaderVersion="[52,)"
+license="All Rights Reserved"
 
-apply plugin: 'eclipse'
-apply plugin: 'idea'
-apply plugin: 'net.minecraftforge.gradle'
+[[mods]]
+modId="axmed555_visuals"
+version="1.0.0"
+displayName="Visuals by axmed555"
+description='Visual effects mod with trails, hitboxes and custom effects'
+authors="axmed555"
 
-repositories {
-    maven {
-        name = 'Forge'
-        url = 'https://maven.minecraftforge.net/'
-    }
-}
+[[dependencies.axmed555_visuals]]
+modId="forge"
+mandatory=true
+versionRange="[52.1.0,)"
+ordering="NONE"
+side="BOTH"
 
-version = mod_version
-group = mod_group_id
-
-base {
-    archivesName = mod_id
-}
-
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
-
-minecraft {
-    mappings channel: mapping_channel, version: mapping_version
-    
-    copyIdeResources = true
-    
-    runs {
-        configureEach {
-            workingDirectory project.file('run')
-            property 'forge.logging.markers', 'REGISTRIES'
-            property 'forge.logging.console.level', 'debug'
-            mods {
-                "${mod_id}" {
-                    source sourceSets.main
-                }
-            }
-        }
-    }
-}
-
-dependencies {
-    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
-}
-
-tasks.named('processResources', ProcessResources).configure {
-    var replaceProperties = [
-            minecraft_version: minecraft_version,
-            forge_version: forge_version,
-            mod_id: mod_id,
-            mod_name: mod_name,
-            mod_license: mod_license,
-            mod_version: mod_version,
-            mod_authors: mod_authors,
-            mod_description: mod_description,
-    ]
-    inputs.properties replaceProperties
-
-    filesMatching(['META-INF/mods.toml', 'pack.mcmeta']) {
-        expand replaceProperties + [project: project]
-    }
-}
-
-tasks.named('jar', Jar).configure {
-    manifest {
-        attributes([
-            "Specification-Title": mod_id,
-            "Specification-Vendor": mod_authors,
-            "Specification-Version": "1",
-            "Implementation-Title": project.name,
-            "Implementation-Version": project.jar.archiveVersion,
-            "Implementation-Vendor": mod_authors,
-            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
-        ])
-    }
-}
-
-// 👇 ДОБАВЬ ЭТОТ БЛОК ДЛЯ РЕСУРСОВ
-sourceSets {
-    main {
-        resources {
-            srcDirs = ['src/main/resources']
-        }
-    }
-}
-
-processResources {
-    from('src/main/resources') {
-        include '**/*'
-    }
-}
+[[dependencies.axmed555_visuals]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.21.1,1.22)"
+ordering="NONE"
+side="BOTH"
