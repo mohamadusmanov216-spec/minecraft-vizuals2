@@ -2,7 +2,7 @@ plugins {
     id 'eclipse'
     id 'idea'
     id 'net.minecraftforge.gradle' version '[6.0.16,6.2)'
-    id 'org.parchmentmc.librarian.forgegradle' version '1.+'
+    // УДАЛИТЬ ЭТУ СТРОКУ: id 'org.parchmentmc.librarian.forgegradle' version '1.+'
 }
 
 version = mod_version
@@ -19,10 +19,8 @@ java {
 }
 
 minecraft {
-    mappings channel: mapping_channel, version: mapping_version
-    
-    // Этот параметр больше не поддерживается в новых версиях, удалите его
-    // copyIdeResources = true
+    // Используйте официальные маппинги вместо Parchment
+    mappings channel: 'official', version: '1.21.1'
     
     runs {
         configureEach {
@@ -37,30 +35,13 @@ minecraft {
             }
         }
 
-        client {
-            // Дополнительные настройки для клиента
-        }
-
-        server {
-            // Дополнительные настройки для сервера
-        }
-
-        data {
-            // Настройки для генерации данных
-            workingDirectory project.file('run-data')
-            args '--mod', mod_id, '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
-        }
+        client {}
+        server {}
     }
 }
 
-// Добавьте этот блок для репозиториев
 repositories {
     maven {
-        name = 'ParchmentMC'
-        url = 'https://maven.parchmentmc.org'
-    }
-    maven {
-        name = 'Forge'
         url = 'https://maven.minecraftforge.net/'
     }
 }
@@ -104,8 +85,4 @@ tasks.named('jar', Jar).configure {
     }
     
     finalizedBy 'reobfJar'
-}
-
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
 }
