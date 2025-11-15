@@ -7,8 +7,6 @@ import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.client.ConfigScreenHandler;
-import net.minecraftforge.client.event.ScreenEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -16,49 +14,25 @@ import org.apache.logging.log4j.Logger;
 public class AxmedVisuals {
     public static final String MOD_ID = "axmed555_visuals";
     public static final Logger LOGGER = LogManager.getLogger();
-    private static ModConfig clientConfig;
 
     public AxmedVisuals() {
         var modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         
         modEventBus.addListener(this::clientSetup);
-        modEventBus.addListener(this::registerKeys);
         
-        // Регистрация конфига
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, Config.SPEC);
         
-        ModLoadingContext.get().registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class,
+        ModLoadingContext.get().registerExtensionPoint(
+            ConfigScreenHandler.ConfigScreenFactory.class,
             () -> new ConfigScreenHandler.ConfigScreenFactory(
-                (mc, screen) -> new com.axmed555.visuals.gui.ConfigScreen(screen)));
+                (mc, screen) -> new com.axmed555.visuals.gui.ConfigScreen(screen)
+            )
+        );
         
         MinecraftForge.EVENT_BUS.register(this);
     }
-    
-    private void registerKeys(net.minecraftforge.client.event.RegisterKeyMappingsEvent event) {
-        event.register(KeyInputHandler.openGuiKey);
-        event.register(KeyInputHandler.bind1Key);
-        event.register(KeyInputHandler.bind2Key);
-        event.register(KeyInputHandler.bind3Key);
-        event.register(KeyInputHandler.bind4Key);
-    }
 
     private void clientSetup(final FMLClientSetupEvent event) {
-        MinecraftForge.EVENT_BUS.register(new ClientEventHandler());
         LOGGER.info("Visuals by axmed555 initialized!");
-    }
-
-    @SubscribeEvent
-    public void onScreenInit(ScreenEvent.Init event) {
-        // Кастомный начальный экран с "Visuals by axmed555"
-        if (event.getScreen() instanceof net.minecraft.client.gui.screens.TitleScreen) {
-            // Здесь будет код для красивого начального экрана
-            LOGGER.info("Custom title screen loaded: Visuals by axmed555");
-        }
-    }
-
-    public static void saveConfig() {
-        if (clientConfig != null) {
-            clientConfig.save();
-        }
     }
 }
