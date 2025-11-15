@@ -21,7 +21,7 @@ import org.joml.Vector3f;
 
 @Mod.EventBusSubscriber(modid = "axmed555_visuals", value = Dist.CLIENT)
 public class ClientEventHandler {
-    private static final Minecraft mc = Minecraft.getInstance();
+    
     private static boolean wasOnGround = false;
     private static boolean previousWasOnGround = false;
     private static long lastKillTime = 0;
@@ -29,42 +29,43 @@ public class ClientEventHandler {
     private static long lastTrajectoryTick = 0;
     private static long skyTickCounter = 0;
 
-@SubscribeEvent
-public static void onRenderLevelStage(RenderLevelStageEvent event) {
-    if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_PARTICLES) return;
-    
-    Player player = mc.player;
-    if (player == null) return;
+    @SubscribeEvent
+    public static void onRenderLevelStage(RenderLevelStageEvent event) {
+        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_PARTICLES) return;
+        
+        Player player = Minecraft.getInstance().player;
+        if (player == null) return;
 
-    // ИСПРАВЛЕННАЯ ЧАСТЬ - новый API для PoseStack
-    var poseStack = new com.mojang.blaze3d.vertex.PoseStack();
-    poseStack.setIdentity();
-    var camera = event.getCamera();
-    poseStack.mulPose(camera.rotation());
-    poseStack.translate(-camera.getPosition().x, -camera.getPosition().y, -camera.getPosition().z);
+        // ИСПРАВЛЕННАЯ ЧАСТЬ - новый API для PoseStack
+        var poseStack = new com.mojang.blaze3d.vertex.PoseStack();
+        poseStack.setIdentity();
+        var camera = event.getCamera();
+        poseStack.mulPose(camera.rotation());
+        poseStack.translate(-camera.getPosition().x, -camera.getPosition().y, -camera.getPosition().z);
 
-    Vec3 cameraPos = event.getCamera().getPosition();
+        Vec3 cameraPos = event.getCamera().getPosition();
 
-    if (Config.SHOW_TRAIL.get()) {
-        spawnTrailParticles(player);
+        if (Config.SHOW_TRAIL.get()) {
+            spawnTrailParticles(player);
+        }
+
+        if (Config.SHOW_HITBOX.get()) {
+            renderEnlargedHitbox(player, poseStack, cameraPos, event.getPartialTick());
+        }
+
+        if (Config.HAT_STYLE.get() != Config.HatStyle.NONE) {
+            renderHat(player, poseStack, cameraPos, event.getPartialTick());
+        }
+        
+        if (Config.SHOW_TRAJECTORIES.get()) {
+            renderTrajectories(player, poseStack, cameraPos);
+        }
+        
+        if (Config.SHOW_SKY_EFFECTS.get()) {
+            renderSkyEffects(player);
+        }
     }
 
-    if (Config.SHOW_HITBOX.get()) {
-        renderEnlargedHitbox(player, poseStack, cameraPos, event.getPartialTick());
-    }
-
-    if (Config.HAT_STYLE.get() != Config.HatStyle.NONE) {
-        renderHat(player, poseStack, cameraPos, event.getPartialTick());
-    }
-    
-    if (Config.SHOW_TRAJECTORIES.get()) {
-        renderTrajectories(player, poseStack, cameraPos);
-    }
-    
-    if (Config.SHOW_SKY_EFFECTS.get()) {
-        renderSkyEffects(player);
-    }
-}
     private static void spawnTrailParticles(Player player) {
         Config.TrailStyle style = Config.TRAIL_STYLE.get();
         
@@ -247,101 +248,103 @@ public static void onRenderLevelStage(RenderLevelStageEvent event) {
         }
     }
 
-private static void renderEnlargedHitbox(Player player, PoseStack poseStack, 
+    private static void renderEnlargedHitbox(Player player, PoseStack poseStack, 
                                      Vec3 cameraPos, float partialTicks) {
-    AABB box = player.getBoundingBox();
-    double multiplier = 1.5;
-    
-    double centerX = (box.minX + box.maxX) / 2;
-    double centerY = (box.minY + box.maxY) / 2;
-    double centerZ = (box.minZ + box.maxZ) / 2;
-    
-    double width = (box.maxX - box.minX) * multiplier / 2;
-    double height = (box.maxY - box.minY) * multiplier / 2;
-    double depth = (box.maxZ - box.minZ) * multiplier / 2;
-    
-    AABB enlargedBox = new AABB(
-        centerX - width, centerY - height, centerZ - depth,
-        centerX + width, centerY + height, centerZ + depth
-    );
+        AABB box = player.getBoundingBox();
+        double multiplier = 1.5;
+        
+        double centerX = (box.minX + box.maxX) / 2;
+        double centerY = (box.minY + box.maxY) / 2;
+        double centerZ = (box.minZ + box.maxZ) / 2;
+        
+        double width = (box.maxX - box.minX) * multiplier / 2;
+        double height = (box.maxY - box.minY) * multiplier / 2;
+        double depth = (box.maxZ - box.minZ) * multiplier / 2;
+        
+        AABB enlargedBox = new AABB(
+            centerX - width, centerY - height, centerZ - depth,
+            centerX + width, centerY + height, centerZ + depth
+        );
 
-    // УБРАЛ pushPose() и translate() - уже сделано в основном методе
-    
-    RenderSystem.disableDepthTest();
-    RenderSystem.enableBlend();
-    RenderSystem.defaultBlendFunc();
-    RenderSystem.lineWidth(2.0f);
+        poseStack.pushPose();
+        
+        RenderSystem.disableDepthTest();
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.lineWidth(2.0f);
 
-    float r = Config.HITBOX_RED.get() / 255f;
-    float g = Config.HITBOX_GREEN.get() / 255f;
-    float b = Config.HITBOX_BLUE.get() / 255f;
-    
-    MultiBufferSource.BufferSource bufferSource = mc.renderBuffers().bufferSource();
-    LevelRenderer.renderLineBox(poseStack, bufferSource.getBuffer(
-        net.minecraft.client.renderer.RenderType.lines()), 
-        enlargedBox, r, g, b, 1.0f);
+        float r = Config.HITBOX_RED.get() / 255f;
+        float g = Config.HITBOX_GREEN.get() / 255f;
+        float b = Config.HITBOX_BLUE.get() / 255f;
+        
+        MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
+        LevelRenderer.renderLineBox(poseStack, bufferSource.getBuffer(
+            net.minecraft.client.renderer.RenderType.lines()), 
+            enlargedBox, r, g, b, 1.0f);
 
-    bufferSource.endBatch();
-    RenderSystem.enableDepthTest();
-    RenderSystem.disableBlend();
-    
-    // УБРАЛ popPose() - уже сделано в основном методе
-}
-private static void renderHat(Player player, PoseStack poseStack, 
-                      Vec3 cameraPos, float partialTicks) {
-    Config.HatStyle style = Config.HAT_STYLE.get();
-    
-    poseStack.pushPose();  // ← ОСТАВЬ ТОЛЬКО ЭТУ СТРОКУ
-    
-    double x = player.getX();
-    double y = player.getY() + player.getBbHeight() + 0.5;
-    double z = player.getZ();
-    
-    switch (style) {
-        case CROWN:
-            renderCrown(x, y, z);
-            break;
-        case AURA:
-            renderAura(x, y - 0.5, z);
-            break;
-        case WINGS:
-            renderWings(x, y - 0.3, z);
-            break;
-        case HALO:
-            renderHalo(x, y, z);
-            break;
+        bufferSource.endBatch();
+        RenderSystem.enableDepthTest();
+        RenderSystem.disableBlend();
+        
+        poseStack.popPose();
     }
-    
-    // УБРАЛ popPose() - не нужен
-}
+
+    private static void renderHat(Player player, PoseStack poseStack, 
+                          Vec3 cameraPos, float partialTicks) {
+        Config.HatStyle style = Config.HAT_STYLE.get();
+        
+        poseStack.pushPose();
+        
+        double x = player.getX();
+        double y = player.getY() + player.getBbHeight() + 0.5;
+        double z = player.getZ();
+        
+        switch (style) {
+            case CROWN:
+                renderCrown(x, y, z);
+                break;
+            case AURA:
+                renderAura(x, y - 0.5, z);
+                break;
+            case WINGS:
+                renderWings(x, y - 0.3, z);
+                break;
+            case HALO:
+                renderHalo(x, y, z);
+                break;
+        }
+        
+        poseStack.popPose();
+    }
+
     private static void renderCrown(double x, double y, double z) {
-        if (mc.player.level().random.nextFloat() < 0.2f) {
-            float gradient = mc.player.level().random.nextFloat();
+        if (Minecraft.getInstance().player.level().random.nextFloat() < 0.2f) {
+            float gradient = Minecraft.getInstance().player.level().random.nextFloat();
             float r = lerp(Config.CROWN_R1.get() / 255f, Config.CROWN_R2.get() / 255f, gradient);
             float g = lerp(Config.CROWN_G1.get() / 255f, Config.CROWN_G2.get() / 255f, gradient);
             float b = lerp(Config.CROWN_B1.get() / 255f, Config.CROWN_B2.get() / 255f, gradient);
             
-            double px = x + (mc.player.level().random.nextDouble() - 0.5) * 0.4;
+            double px = x + (Minecraft.getInstance().player.level().random.nextDouble() - 0.5) * 0.4;
             double py = y;
-            double pz = z + (mc.player.level().random.nextDouble() - 0.5) * 0.4;
+            double pz = z + (Minecraft.getInstance().player.level().random.nextDouble() - 0.5) * 0.4;
             
-            mc.player.level().addParticle(new DustParticleOptions(new Vector3f(r, g, b), 1.5F), 
+            Minecraft.getInstance().player.level().addParticle(new DustParticleOptions(new Vector3f(r, g, b), 1.5F), 
                 px, py, pz, 0, 0.05, 0);
         }
     }
 
     private static void renderAura(double x, double y, double z) {
-        if (mc.player.level().random.nextFloat() < 0.3f) {
-            double angle = mc.player.level().random.nextDouble() * Math.PI * 2;
+        if (Minecraft.getInstance().player.level().random.nextFloat() < 0.3f) {
+            double angle = Minecraft.getInstance().player.level().random.nextDouble() * Math.PI * 2;
             double radius = 0.6;
-            double heightOffset = mc.player.level().random.nextDouble() * 2;
+            double heightOffset = Minecraft.getInstance().player.level().random.nextDouble() * 2;
             
             float gradient = (float)(heightOffset / 2.0);
             float r = lerp(Config.AURA_R1.get() / 255f, Config.AURA_R2.get() / 255f, gradient);
             float g = lerp(Config.AURA_G1.get() / 255f, Config.AURA_G2.get() / 255f, gradient);
             float b = lerp(Config.AURA_B1.get() / 255f, Config.AURA_B2.get() / 255f, gradient);
             
-            mc.player.level().addParticle(new DustParticleOptions(new Vector3f(r, g, b), 1.0F), 
+            Minecraft.getInstance().player.level().addParticle(new DustParticleOptions(new Vector3f(r, g, b), 1.0F), 
                 x + Math.cos(angle) * radius, 
                 y + heightOffset, 
                 z + Math.sin(angle) * radius, 
@@ -350,15 +353,15 @@ private static void renderHat(Player player, PoseStack poseStack,
     }
 
     private static void renderWings(double x, double y, double z) {
-        if (mc.player.level().random.nextFloat() < 0.25f) {
-            double offsetX = (mc.player.level().random.nextDouble() - 0.5) * 1.2;
+        if (Minecraft.getInstance().player.level().random.nextFloat() < 0.25f) {
+            double offsetX = (Minecraft.getInstance().player.level().random.nextDouble() - 0.5) * 1.2;
             float side = offsetX > 0 ? 1.0f : 0.0f;
             
             float r = lerp(Config.WINGS_R1.get() / 255f, Config.WINGS_R2.get() / 255f, side);
             float g = lerp(Config.WINGS_G1.get() / 255f, Config.WINGS_G2.get() / 255f, side);
             float b = lerp(Config.WINGS_B1.get() / 255f, Config.WINGS_B2.get() / 255f, side);
             
-            mc.player.level().addParticle(new DustParticleOptions(new Vector3f(r, g, b), 1.2F), 
+            Minecraft.getInstance().player.level().addParticle(new DustParticleOptions(new Vector3f(r, g, b), 1.2F), 
                 x + offsetX, 
                 y, 
                 z, 
@@ -367,8 +370,8 @@ private static void renderHat(Player player, PoseStack poseStack,
     }
 
     private static void renderHalo(double x, double y, double z) {
-        if (mc.player.level().random.nextFloat() < 0.3f) {
-            double angle = mc.player.level().random.nextDouble() * Math.PI * 2;
+        if (Minecraft.getInstance().player.level().random.nextFloat() < 0.3f) {
+            double angle = Minecraft.getInstance().player.level().random.nextDouble() * Math.PI * 2;
             double radius = 0.5;
             
             float gradient = (float)(angle / (Math.PI * 2));
@@ -376,7 +379,7 @@ private static void renderHat(Player player, PoseStack poseStack,
             float g = lerp(Config.HALO_G1.get() / 255f, Config.HALO_G2.get() / 255f, gradient);
             float b = lerp(Config.HALO_B1.get() / 255f, Config.HALO_B2.get() / 255f, gradient);
             
-            mc.player.level().addParticle(new DustParticleOptions(new Vector3f(r, g, b), 1.3F), 
+            Minecraft.getInstance().player.level().addParticle(new DustParticleOptions(new Vector3f(r, g, b), 1.3F), 
                 x + Math.cos(angle) * radius, 
                 y, 
                 z + Math.sin(angle) * radius, 
@@ -391,7 +394,7 @@ private static void renderHat(Player player, PoseStack poseStack,
     @SubscribeEvent
     public static void onLivingHurt(LivingHurtEvent event) {
         if (!event.getEntity().level().isClientSide) return;
-        if (mc.player == null) return;
+        if (Minecraft.getInstance().player == null) return;
         
         Entity entity = event.getEntity();
         Entity attacker = event.getSource().getEntity();
@@ -400,11 +403,11 @@ private static void renderHat(Player player, PoseStack poseStack,
             spawnHitEffects((LivingEntity) entity);
         }
         
-        if (Config.SHOW_ATTACK_EFFECTS.get() && attacker == mc.player && entity instanceof LivingEntity) {
+        if (Config.SHOW_ATTACK_EFFECTS.get() && attacker == Minecraft.getInstance().player && entity instanceof LivingEntity) {
             spawnAttackEffects((LivingEntity) entity);
         }
         
-        if (Config.SHOW_KILL_EFFECTS.get() && entity instanceof LivingEntity && attacker == mc.player) {
+        if (Config.SHOW_KILL_EFFECTS.get() && entity instanceof LivingEntity && attacker == Minecraft.getInstance().player) {
             LivingEntity living = (LivingEntity) entity;
             if (living.getHealth() - event.getAmount() <= 0) {
                 spawnKillEffects(living);
