@@ -22,7 +22,6 @@ public class AxmedVisuals {
         var modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         
         modEventBus.addListener(this::clientSetup);
-        modEventBus.addListener(this::onConfigLoad);
         modEventBus.addListener(this::registerKeys);
         
         // Регистрация конфига
@@ -43,15 +42,8 @@ public class AxmedVisuals {
         event.register(KeyInputHandler.bind4Key);
     }
 
-    private void onConfigLoad(final ModConfig.Loading event) {
-        if (event.getConfig().getType() == ModConfig.Type.CLIENT) {
-            clientConfig = event.getConfig();
-        }
-    }
-
     private void clientSetup(final FMLClientSetupEvent event) {
         MinecraftForge.EVENT_BUS.register(new ClientEventHandler());
-        MinecraftForge.EVENT_BUS.register(KeyInputHandler.class);
         LOGGER.info("Visuals by axmed555 initialized!");
     }
 
